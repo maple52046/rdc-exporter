@@ -1,3 +1,10 @@
+---
+name: build-docker-image
+description: >-
+  Explicit-only workflow that builds and verifies the TheRock-based Debian
+  13 distroless rdc-exporter image through the Makefile, using a matching
+  TheRock ROCm root and commit while preserving rocm-smi and profiling.
+---
 # Build Docker Image
 
 Build the TheRock-based Debian 13 distroless `rdc-exporter` image through the
@@ -5,8 +12,8 @@ repository `Makefile`. Run every command from the repository root.
 
 ## When to use
 
-Use this skill when the user asks to build, verify, tag, or push the
-`rdc-exporter` container image, especially for `/build-docker-image`.
+This skill is explicit-only. Use it only after the user invokes
+`$build-docker-image` to build, verify, tag, or push the `rdc-exporter` image.
 
 ## Required decisions and inputs
 
@@ -22,15 +29,15 @@ The exporter binary must be compiled against the same RDC headers and libraries
 that supply the final runtime. Its cgo directives currently require that build
 to be available at `/opt/rocm`.
 
-Read [`docs/building/distroless.md`](../../docs/building/distroless.md) before
+Read [`docs/building/distroless.md`](../../../docs/building/distroless.md) before
 changing the Dockerfile, runtime closure, base digest, or profiling field set.
-Read [`docs/building/minimal-therock-rdc.md`](../../docs/building/minimal-therock-rdc.md)
+Read [`docs/building/minimal-therock-rdc.md`](../../../docs/building/minimal-therock-rdc.md)
 when producing the TheRock input from source.
 
 ## Invocation
 
 ```text
-/build-docker-image [--date <YYYYMMDD>] [--no-verify] [--push] [--tag <full-tag>]
+$build-docker-image [--date <YYYYMMDD>] [--no-verify] [--push] [--tag <full-tag>]
 ```
 
 - `--date`: pass `BUILD_DATE=<date>` to `make`.

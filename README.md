@@ -17,6 +17,8 @@ Start here:
 | Kubernetes deployment guide (English) | [`docs/deployment/k8s/README.md`](docs/deployment/k8s/README.md) |
 | Kubernetes deployment guide (繁體中文) | [`docs/deployment/k8s/README_zhtw.md`](docs/deployment/k8s/README_zhtw.md) |
 | Kubernetes deployment guide (简体中文) | [`docs/deployment/k8s/README_zhcn.md`](docs/deployment/k8s/README_zhcn.md) |
+| TheRock distroless image build | [`docs/building/distroless.md`](docs/building/distroless.md) |
+| Minimal TheRock build for RDC | [`docs/building/minimal-therock-rdc.md`](docs/building/minimal-therock-rdc.md) |
 | Helm chart | [`charts/rdc-exporter/README.md`](charts/rdc-exporter/README.md) |
 
 The configuration guide explains the two-layer model (metric list + catalog),
@@ -154,22 +156,27 @@ rdc-exporter --catalog catalog.yml
 
 ## Building
 
-The `Makefile` owns the ROCm, Go, and image-tag build parameters. The most
-important ROCm value is `ROCM_DEB`: it is the actual AMD `amdgpu-install` package
-URL used by the Docker build to configure the ROCm apt repository. Keep
-`ROCM_VERSION` and `ROCM_DEB` in sync.
+The release Dockerfile assembles a pre-built CGO exporter and a selected runtime
+closure from a matching TheRock distribution into a Debian 13 distroless image.
+The build host must expose the selected RDC headers and libraries at `/opt/rocm`.
 
 ```bash
 make build
-make image
-make image-verify
+make prepare-runtime THEROCK_ROCM_ROOT=/path/to/therock-rocm
+make image THEROCK_COMMIT=<full-therock-commit>
 ```
 
-Override versions from the command line when needed:
+The image supports direct `rocm-smi` execution and retains RDC profiling,
+including `RDC_FI_PROF_SM_ACTIVE`. Verify the assembled filesystem with:
 
 ```bash
-make image \
-  ROCM_VERSION=7.2.4 \
-  ROCM_DEB=https://repo.radeon.com/amdgpu-install/7.2.4/ubuntu/noble/amdgpu-install_7.2.4.70204-1_all.deb \
-  GO_VERSION=1.26.4
+make image-verify THEROCK_COMMIT=<full-therock-commit>
 ```
+
+See the [TheRock distroless build guide](docs/building/distroless.md) for input
+requirements, GPU runtime verification, profiling-counter limits, and the
+measured image-size breakdown.
+
+To produce the ROCm input from source, follow the standalone
+[minimal TheRock build for RDC](docs/building/minimal-therock-rdc.md), including
+its Debian 13 builder and artifact validation procedure.

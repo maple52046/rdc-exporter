@@ -1,5 +1,6 @@
 *.log
 bin/
+runtime-root/
 docs/plans/manuscripts/*.md
 website/.vite/
 website/dist/

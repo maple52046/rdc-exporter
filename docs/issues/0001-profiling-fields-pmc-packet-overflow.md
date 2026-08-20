@@ -81,7 +81,7 @@ Limit the field list so the profiling count stays under the GPU's PMC packet cei
 (e.g. a mounted ConfigMap — see `example/rdc-exporter-daemonset.yml`). Validated stable set:
 10 telemetry + 6 profiling
 (`RDC_FI_PROF_OCCUPANCY_PERCENT, RDC_FI_PROF_GPU_UTIL_PERCENT, RDC_FI_PROF_TENSOR_ACTIVE_PERCENT,
-RDC_FI_PROF_ACTIVE_CYCLES, RDC_FI_PROF_ELAPSED_CYCLES, RDC_FI_PROF_EVAL_FLOPS_16`).
+RDC_FI_PROF_ACTIVE_CYCLES, RDC_FI_PROF_ELAPSED_CYCLES, RDC_FI_PROF_SM_ACTIVE`).
 
 ## Suggested fixes (code)
 1. **Multi-pass / batched PMC sampling:** split profiling counters across multiple packets

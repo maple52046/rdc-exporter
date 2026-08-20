@@ -1,0 +1,6 @@
+**
+!Dockerfile
+!bin/
+!bin/rdc-exporter
+!runtime-root/
+!runtime-root/**
