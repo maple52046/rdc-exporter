@@ -7,23 +7,23 @@ import (
 
 func TestLabelKeys(t *testing.T) {
 	tests := []struct {
-		name    string
-		dynamic []string
-		want    []string
+		name       string
+		additional []string
+		want       []string
 	}{
-		{name: "no dynamic keys", dynamic: nil, want: []string{GPUIndexLabel}},
+		{name: "no additional keys", additional: nil, want: []string{GPUIndexLabel}},
 		{
-			name:    "dynamic keys follow gpu index",
-			dynamic: []string{"pod", "namespace", "container"},
-			want:    []string{GPUIndexLabel, "pod", "namespace", "container"},
+			name:       "additional keys follow gpu index",
+			additional: []string{"pod", "namespace", "container", "UUID"},
+			want:       []string{GPUIndexLabel, "pod", "namespace", "container", "UUID"},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := LabelKeys(tc.dynamic)
+			got := LabelKeys(tc.additional)
 			if !slices.Equal(got, tc.want) {
-				t.Errorf("LabelKeys(%v) = %v, want %v", tc.dynamic, got, tc.want)
+				t.Errorf("LabelKeys(%v) = %v, want %v", tc.additional, got, tc.want)
 			}
 		})
 	}
@@ -31,25 +31,25 @@ func TestLabelKeys(t *testing.T) {
 
 func TestLabelValues(t *testing.T) {
 	tests := []struct {
-		name     string
-		gpuIndex GPUIndex
-		dynamic  []string
-		want     []string
+		name       string
+		gpuIndex   GPUIndex
+		additional []string
+		want       []string
 	}{
-		{name: "only gpu index", gpuIndex: 3, dynamic: nil, want: []string{"3"}},
+		{name: "only gpu index", gpuIndex: 3, additional: nil, want: []string{"3"}},
 		{
-			name:     "dynamic values follow gpu index",
-			gpuIndex: 0,
-			dynamic:  []string{"app", "user1", "main"},
-			want:     []string{"0", "app", "user1", "main"},
+			name:       "additional values follow gpu index",
+			gpuIndex:   0,
+			additional: []string{"app", "user1", "main", "GPU-0000000000001234"},
+			want:       []string{"0", "app", "user1", "main", "GPU-0000000000001234"},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := LabelValues(tc.gpuIndex, tc.dynamic)
+			got := LabelValues(tc.gpuIndex, tc.additional)
 			if !slices.Equal(got, tc.want) {
-				t.Errorf("LabelValues(%v, %v) = %v, want %v", tc.gpuIndex, tc.dynamic, got, tc.want)
+				t.Errorf("LabelValues(%v, %v) = %v, want %v", tc.gpuIndex, tc.additional, got, tc.want)
 			}
 		})
 	}

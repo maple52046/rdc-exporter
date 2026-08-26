@@ -44,7 +44,7 @@ flowchart LR
 
 - **node-labeller**: Labels nodes based on the AMD GPU attributes present on each node (`beta.amd.com/gpu.*`), so that label selectors can be used for scheduling. This component only manages labels; it does not register GPUs as requestable resources.
 - **device-plugin**: Registers GPUs as the schedulable resource `amd.com/gpu`, so that workloads can request GPUs via `resources.limits`.
-- **rdc-exporter**: Queries the "GPU-to-Pod mapping" through the kubelet pod-resources interface. Therefore, a workload must formally request GPUs through the device-plugin before `rdc-exporter` can annotate metrics with the corresponding `pod`, `namespace`, and `container`; otherwise, the metrics will carry only `gpu_index`.
+- **rdc-exporter**: Queries the "GPU-to-Pod mapping" through the kubelet pod-resources interface. Therefore, a workload must formally request GPUs through the device-plugin before `rdc-exporter` can annotate metrics with the corresponding `pod`, `namespace`, and `container`; without that mapping, metrics still carry `gpu_index` and the startup-discovered `UUID`.
 
 ## 4. Step 1: Deploy the device-plugin and node-labeller
 
@@ -461,7 +461,7 @@ curl -s localhost:5000/metrics | grep 'pod="vllm-qwen'
 Expect the allocated GPU (e.g., `gpu_index="0"`) to be annotated with `container`, `namespace`, and `pod`:
 
 ```text
-gpu_memory_usage{container="vllm",gpu_index="0",namespace="default",pod="vllm-qwen-..."} 287252.5
+gpu_memory_usage{UUID="GPU-0011223344556677",container="vllm",gpu_index="0",namespace="default",pod="vllm-qwen-..."} 287252.5
 ```
 
 After applying inference load to the service, metrics such as `gpu_clock`, `power_usage`, `active_cycles`, and the profiling metrics should rise accordingly, indicating that both metric collection and Pod association are working correctly.
@@ -478,7 +478,8 @@ kubectl delete -f vllm-qwen.yaml
 | --- | --- |
 | Pod cannot be scheduled with `amd.com/gpu` (`Insufficient amd.com/gpu`) | The device-plugin is not deployed, or the node's `allocatable.amd.com/gpu` is 0. Confirm that Section 4.2 is complete; deploying only the node-labeller is not sufficient. |
 | Pods for the device-plugin, node-labeller, or rdc-exporter stay `Pending` | The node has an untolerated taint (common on single-node or control-plane nodes). Remove the taint or add the corresponding toleration to the DaemonSet. |
-| `/metrics` metrics have only `gpu_index` and are missing the `pod`, `namespace`, and `container` labels | The workload did not request GPUs through the device-plugin; or the hostPath path of the pod-resources socket is incorrect (see Section 5.3). |
+| `/metrics` metrics have `gpu_index`/`UUID` but are missing the `pod`, `namespace`, and `container` labels | The workload did not request GPUs through the device-plugin; or the hostPath path of the pod-resources socket is incorrect (see Section 5.3). |
+| `/metrics` has an empty `UUID` label | `rocm-smi --json --showuniqueid` is unavailable, failed, or returned an invalid Unique ID. Check the exporter log for the startup warning. |
 | The rdc-exporter Pod is `Running`, but `/metrics` data is no longer updating | The number of profiling metrics exceeds the GPU PMC packet limit (see Section 5.4). Reduce the number of `RDC_FI_PROF_*` metrics and run `rollout restart`. |
 | No `amd.com/gpu.*` labels appear on the node | Confirm that the node has an AMD GPU and driver (`/dev/kfd` exists), and that the node-labeller is privileged and has `/sys` and `/dev` mounted. |
 

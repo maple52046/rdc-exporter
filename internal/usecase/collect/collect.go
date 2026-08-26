@@ -40,19 +40,19 @@ type FieldReader interface {
 	ReadSamples(ctx context.Context) ([]metric.Sample, error)
 }
 
-// LabelProvider supplies the dynamic labels attached to each GPU's series.
+// LabelProvider supplies the additional labels attached to each GPU's series.
 //
 // It is optional: when no provider is configured the exporter emits only the
 // mandatory gpu_index label. Refresh updates the provider's view of the world
-// (for example by querying the kubelet) and is called once at the start of each
-// collection so that LabelsFor reflects the current mapping. LabelKeys is the
-// fixed, ordered set of dynamic label names and must stay aligned with the
-// values returned by LabelsFor.
+// when needed (for example by querying the kubelet) and is called once at the
+// start of each collection so that LabelsFor reflects the current mapping.
+// LabelKeys is the fixed, ordered set of additional label names and must stay
+// aligned with the values returned by LabelsFor.
 type LabelProvider interface {
-	// LabelKeys returns the dynamic label names in a stable order. The order
+	// LabelKeys returns the additional label names in a stable order. The order
 	// must match the values returned by LabelsFor.
 	LabelKeys() []string
-	// LabelsFor returns the dynamic label values for one GPU, positionally
+	// LabelsFor returns the additional label values for one GPU, positionally
 	// aligned with LabelKeys. A GPU with no known labels yields empty strings,
 	// never a shorter slice, so series keep a consistent label cardinality.
 	LabelsFor(gpuIndex metric.GPUIndex) []string
@@ -83,7 +83,7 @@ type Service struct {
 	definitions map[metric.FieldID]metric.Definition
 	// reader pulls raw field samples from the RDC library.
 	reader FieldReader
-	// labels supplies dynamic labels; nil disables dynamic labelling.
+	// labels supplies additional labels; nil disables additional labelling.
 	labels LabelProvider
 	// sink publishes the prepared points.
 	sink MetricSink

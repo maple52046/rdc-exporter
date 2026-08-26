@@ -37,13 +37,13 @@ type Sink struct {
 // New registers a gauge for every definition and returns a ready Sink.
 //
 // All series share the same label names: the mandatory gpu_index label followed
-// by dynamicLabelKeys (which may be nil when no label provider is configured).
+// by additionalLabelKeys (which may include workload and GPU identity labels).
 // Definitions are expected to carry a resolved Name and Help; duplicate field
 // ids register a single gauge and the extras are ignored. Registration failure
 // (for example a duplicate or invalid metric name) is returned as an error so
 // the caller can fail startup instead of panicking.
-func New(reg *prometheus.Registry, definitions []metric.Definition, dynamicLabelKeys []string) (*Sink, error) {
-	labelKeys := metric.LabelKeys(dynamicLabelKeys)
+func New(reg *prometheus.Registry, definitions []metric.Definition, additionalLabelKeys []string) (*Sink, error) {
+	labelKeys := metric.LabelKeys(additionalLabelKeys)
 
 	sink := &Sink{
 		gauges:     make(map[metric.FieldID]*prometheus.GaugeVec, len(definitions)),
@@ -75,9 +75,9 @@ func New(reg *prometheus.Registry, definitions []metric.Definition, dynamicLabel
 //
 // A point whose field has no registered gauge is logged and skipped. When a
 // (field, GPU) series' label values differ from the previous Publish, the old
-// series is deleted first so changed dynamic labels (for example a GPU moving to
-// a new pod) do not leave a stale time series behind. Publish always returns nil
-// today; it returns an error to satisfy the MetricSink contract and to allow
+// series is deleted first so changed additional labels (for example a GPU moving
+// to a new pod) do not leave a stale time series behind. Publish always returns
+// nil today; it returns an error to satisfy the MetricSink contract and to allow
 // future backends to report failures.
 func (s *Sink) Publish(points []metric.Point) error {
 	for _, point := range points {

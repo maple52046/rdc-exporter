@@ -44,7 +44,7 @@ flowchart LR
 
 - **node-labeller**：依节点上的 AMD GPU 属性为节点加上标签（`beta.amd.com/gpu.*`），供标签选择器（label selector）进行调度。此组件仅负责标签，不会将 GPU 注册为可申请的资源。
 - **device-plugin**：将 GPU 注册为可调度资源 `amd.com/gpu`，工作负载才能通过 `resources.limits` 申请 GPU。
-- **rdc-exporter**：通过 kubelet 的 pod-resources 接口查询“GPU 与 Pod 的对应关系”。因此，工作负载必须经由 device-plugin 正式申请 GPU，`rdc-exporter` 才能将指标标注上对应的 `pod`、`namespace` 与 `container`；否则指标仅会带有 `gpu_index`。
+- **rdc-exporter**：通过 kubelet 的 pod-resources 接口查询“GPU 与 Pod 的对应关系”。因此，工作负载必须经由 device-plugin 正式申请 GPU，`rdc-exporter` 才能将指标标注上对应的 `pod`、`namespace` 与 `container`；没有此对应时，指标仍会带有 `gpu_index` 与启动时取得的 `UUID`。
 
 ## 4. 步骤一：部署 device-plugin 与 node-labeller
 
@@ -461,7 +461,7 @@ curl -s localhost:5000/metrics | grep 'pod="vllm-qwen'
 预期被分配的 GPU（例如 `gpu_index="0"`）会被标注上 `container`、`namespace` 与 `pod`：
 
 ```text
-gpu_memory_usage{container="vllm",gpu_index="0",namespace="default",pod="vllm-qwen-..."} 287252.5
+gpu_memory_usage{UUID="GPU-0011223344556677",container="vllm",gpu_index="0",namespace="default",pod="vllm-qwen-..."} 287252.5
 ```
 
 对服务施加推理负载后，`gpu_clock`、`power_usage`、`active_cycles` 及 profiling 等指标应随之上升，代表指标采集与 Pod 关联均正常运行。
@@ -478,7 +478,8 @@ kubectl delete -f vllm-qwen.yaml
 | --- | --- |
 | Pod 无法以 `amd.com/gpu` 调度（`Insufficient amd.com/gpu`） | 尚未部署 device-plugin，或节点 `allocatable.amd.com/gpu` 为 0。请确认第 4.2 节已完成；仅部署 node-labeller 并不足够。 |
 | device-plugin、node-labeller 或 rdc-exporter 的 Pod 持续 `Pending` | 节点存在未被容忍的 taint（单节点或 control-plane 节点常见）。请移除该 taint 或为 DaemonSet 加上对应 toleration。 |
-| `/metrics` 指标仅有 `gpu_index`，缺少 `pod`、`namespace`、`container` 标签 | 工作负载未通过 device-plugin 申请 GPU；或 pod-resources socket 的 hostPath 路径不正确（参阅第 5.3 节）。 |
+| `/metrics` 指标有 `gpu_index`/`UUID`，但缺少 `pod`、`namespace`、`container` 标签 | 工作负载未通过 device-plugin 申请 GPU；或 pod-resources socket 的 hostPath 路径不正确（参阅第 5.3 节）。 |
+| `/metrics` 的 `UUID` 标签为空字符串 | `rocm-smi --json --showuniqueid` 不存在、执行失败或返回无效 Unique ID。请检查 exporter 启动时的警告日志。 |
 | rdc-exporter Pod 为 `Running`，但 `/metrics` 数据不再更新 | profiling 指标数量超出 GPU PMC 数据包上限（参阅第 5.4 节）。请减少 `RDC_FI_PROF_*` 指标数量后执行 `rollout restart`。 |
 | 节点未出现任何 `amd.com/gpu.*` 标签 | 确认节点具备 AMD GPU 与驱动（`/dev/kfd` 存在），且 node-labeller 为 privileged 并已挂载 `/sys` 与 `/dev`。 |
 

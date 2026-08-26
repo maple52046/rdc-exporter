@@ -75,7 +75,7 @@ func TestCollectScalesAndPublishes(t *testing.T) {
 	}
 }
 
-func TestCollectAttachesDynamicLabels(t *testing.T) {
+func TestCollectAttachesAdditionalLabels(t *testing.T) {
 	reader := &fakeReader{samples: []metric.Sample{
 		{GPUIndex: 0, FieldID: 100, Value: 10},
 	}}

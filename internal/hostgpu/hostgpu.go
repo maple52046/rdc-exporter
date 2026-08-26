@@ -1,11 +1,11 @@
-// Package hostgpu discovers the AMD GPUs present on the host from the kernel
-// sysfs amdgpu driver tree.
+// Package hostgpu discovers AMD GPUs and their stable identities through host
+// interfaces such as the kernel sysfs amdgpu tree and rocm-smi.
 //
 // This is a Frameworks and Drivers layer package: it performs host I/O against
-// /sys and returns plain device descriptors. It exists to map a GPU's PCI
-// address and DRM render device to the same zero-based index the exporter uses
-// elsewhere, which is how container-to-GPU attribution is resolved. It must not
-// depend on RDC, Prometheus, or the use-case layer.
+// /sys or a host command and returns plain device descriptors or identity maps.
+// It exists to align PCI addresses, DRM render devices, and UUIDs with the same
+// zero-based index the exporter uses elsewhere. It must not depend on RDC,
+// Prometheus, or the use-case layer.
 package hostgpu
 
 import (

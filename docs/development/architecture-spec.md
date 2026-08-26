@@ -58,7 +58,7 @@ Responsible for core business concepts and stable rules that span use cases.
 
 May contain:
 
-- Domain types and value objects, such as metric definitions, fields, GPU index, scale, and label rules.
+- Domain types and value objects, such as metric definitions, fields, GPU index, scale, and label rules. Label rules keep `gpu_index` first and positionally align optional workload attribution and the always-declared `UUID` identity label with their values.
 - Business rules that can run without depending on external systems, such as converting a raw field value into an output value via scale, and the rules for assembling and validating labels.
 - Business invariants and state transitions.
 

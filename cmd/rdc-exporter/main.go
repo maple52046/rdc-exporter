@@ -18,12 +18,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ROCm/rdc-exporter/internal/adapter/gpulabeler"
 	"github.com/ROCm/rdc-exporter/internal/adapter/k8slabeler"
 	"github.com/ROCm/rdc-exporter/internal/adapter/prommetric"
 	"github.com/ROCm/rdc-exporter/internal/adapter/rdcsource"
 	"github.com/ROCm/rdc-exporter/internal/bindings/rdc"
 	"github.com/ROCm/rdc-exporter/internal/config/catalog"
 	"github.com/ROCm/rdc-exporter/internal/domain/metric"
+	"github.com/ROCm/rdc-exporter/internal/hostgpu"
 	"github.com/ROCm/rdc-exporter/internal/usecase/collect"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -122,10 +124,9 @@ func main() {
 		_ = reg.Register(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 	}
 
-	// The labeler is optional. It is kept as a concrete value so its Close can be
-	// deferred, and only assigned to the use-case port when present to avoid a
-	// non-nil interface wrapping a nil pointer.
-	var labelProvider collect.LabelProvider
+	// Workload attribution is optional. Keep the concrete labeler available for
+	// cleanup while avoiding a non-nil interface that wraps a nil pointer.
+	var workloadLabelProvider collect.LabelProvider
 	if kubeletPath != "" {
 		lb, err := k8slabeler.New(kubeletPath)
 		if err != nil {
@@ -133,13 +134,17 @@ func main() {
 			return
 		}
 		defer lb.Close()
-		labelProvider = lb
+		workloadLabelProvider = lb
 	}
 
-	var dynamicLabelKeys []string
-	if labelProvider != nil {
-		dynamicLabelKeys = labelProvider.LabelKeys()
+	// GPU UUID discovery is best-effort so a missing rocm-smi binary or one bad
+	// card record cannot prevent the exporter from serving all other metrics.
+	uuidByGPU, err := hostgpu.LoadUUIDs(ctx)
+	if err != nil {
+		slog.Warn("Failed to load one or more GPU UUIDs", "error", err, "loaded", len(uuidByGPU))
 	}
+	labelProvider := gpulabeler.New(uuidByGPU, workloadLabelProvider)
+	additionalLabelKeys := labelProvider.LabelKeys()
 
 	reader, err := rdcsource.New(rdcsource.DefaultConfig(), gpuIndexes, fieldIDs)
 	if err != nil {
@@ -148,7 +153,7 @@ func main() {
 	}
 	defer reader.Close()
 
-	sink, err := prommetric.New(reg, definitions, dynamicLabelKeys)
+	sink, err := prommetric.New(reg, definitions, additionalLabelKeys)
 	if err != nil {
 		slog.Error("Failed to register metrics", "error", err)
 		return

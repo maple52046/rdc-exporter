@@ -1,5 +1,13 @@
 # Metric List
 
+## Common Labels
+
+Every exported metric carries `gpu_index` and `UUID`. The UUID is read once at
+startup from `rocm-smi --json --showuniqueid` and normalized to
+`GPU-` plus 16 lowercase hexadecimal digits; discovery failure leaves the value
+empty without stopping metric collection. When kubelet integration is enabled,
+the metrics also carry the workload labels `pod`, `namespace`, and `container`.
+
 ## RDC Metrics
 
 | Metric | Prom Name | Field ID | Enable | Usage/Help | DCGM Metric |

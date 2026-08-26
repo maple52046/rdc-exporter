@@ -23,7 +23,7 @@ import (
 	podresources "k8s.io/kubelet/pkg/apis/podresources/v1"
 )
 
-// Dynamic label names exported for GPUs attributed to a Kubernetes workload.
+// Workload label names exported for GPUs attributed to a Kubernetes workload.
 // Their order is the contract used by both LabelKeys and LabelsFor and matches
 // what existing scrape configurations expect, so it must not change casually.
 const (
@@ -112,7 +112,7 @@ func (l *Labeler) Close() error {
 	return nil
 }
 
-// LabelKeys returns the dynamic label names in their fixed order: pod,
+// LabelKeys returns the workload label names in their fixed order: pod,
 // namespace, container. The order matches the values produced by LabelsFor.
 func (l *Labeler) LabelKeys() []string {
 	return []string{labelPod, labelNamespace, labelContainer}

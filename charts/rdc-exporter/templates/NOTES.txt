@@ -29,7 +29,7 @@ rdc-exporter has been deployed as a DaemonSet in namespace "{{ .Release.Namespac
    Detect it on the node with: ps -ewwo args | grep -o 'root-dir=[^ ]*'
 {{- else }}
 
-3. Kubelet pod-resources association is disabled; metrics will carry only gpu_index.
+3. Kubelet pod-resources association is disabled; metrics will carry gpu_index and UUID, but no pod/namespace/container labels.
 {{- end }}
 
 Collected metrics fields:

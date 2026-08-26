@@ -65,7 +65,7 @@ LABEL org.opencontainers.image.title="rdc-exporter" \
 
 # Install basic ROCm packages
 RUN apt update && \
-    apt install -y amd-smi-lib comgr hip-runtime-amd hsa-amd-aqlprofile libhsa-runtime64-1 libdw1 && \
+    apt install -y amd-smi-lib comgr hip-runtime-amd hsa-amd-aqlprofile libhsa-runtime64-1 libdw1 rocm-smi-lib && \
     apt clean
 
 # Install RDC exporter

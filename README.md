@@ -56,9 +56,14 @@ Example output:
 ```text
 # HELP gpu_memory_usage Memory usage of the GPU instance
 # TYPE gpu_memory_usage gauge
-gpu_memory_usage{gpu_index="0"} 1335.6769279999999
-gpu_memory_usage{gpu_index="1"} 1335.611392
+gpu_memory_usage{UUID="GPU-0011223344556677",gpu_index="0"} 1335.6769279999999
+gpu_memory_usage{UUID="GPU-8899aabbccddeeff",gpu_index="1"} 1335.611392
 ```
+
+At startup, the exporter reads `rocm-smi --json --showuniqueid` and formats each
+hardware identity as `GPU-` followed by 16 hexadecimal digits. If discovery is
+unavailable, the exporter continues running and exposes `UUID=""` while logging
+a warning.
 
 ## Quickstart on Kubernetes
 
@@ -92,7 +97,7 @@ When workloads request GPUs through the AMD device-plugin
 (`resources.limits.amd.com/gpu`), exported metrics can include workload labels:
 
 ```text
-gpu_memory_usage{container="vllm",gpu_index="0",namespace="default",pod="vllm-qwen-..."} 287252.5
+gpu_memory_usage{UUID="GPU-0011223344556677",container="vllm",gpu_index="0",namespace="default",pod="vllm-qwen-..."} 287252.5
 ```
 
 ## Usage
