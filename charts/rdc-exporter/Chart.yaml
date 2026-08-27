@@ -5,7 +5,7 @@ type: application
 # version is the chart version; bump it on chart changes.
 version: 0.1.0
 # appVersion tracks the default rdc-exporter container image tag used when image.tag is empty.
-appVersion: "v1-rocm7.2.4-20260610"
+appVersion: "v1-rocm7.2.4-20260827"
 keywords:
   - amd
   - gpu

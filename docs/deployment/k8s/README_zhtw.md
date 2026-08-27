@@ -117,7 +117,7 @@ Chart 位於 [`charts/rdc-exporter`](../../../charts/rdc-exporter)，詳見其 [
 
 | 映像標籤（image tag） | ROCm 版本 | 發佈日期 |
 | --- | --- | --- |
-| `ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.4-20260610` | 7.2.4 | 2026-06-10（最新） |
+| `ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.4-20260827` | 7.2.4 | 2026-08-27（最新） |
 | `ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.2-20260609` | 7.2.2 | 2026-06-09 |
 
 標籤格式為 `v1-rocm<ROCm 版本>-<YYYYMMDD>`。
@@ -174,7 +174,7 @@ spec:
       hostNetwork: true
       containers:
         - name: rdc-exporter
-          image: ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.4-20260610
+          image: ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.4-20260827
           imagePullPolicy: IfNotPresent
           # -k 指定 kubelet pod-resources socket；-f 指定 ConfigMap 提供的指標清單
           args:

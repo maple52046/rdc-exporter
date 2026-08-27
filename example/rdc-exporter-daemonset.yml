@@ -55,7 +55,7 @@ spec:
       hostNetwork: true
       containers:
         - name: rdc-exporter
-          image: ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.4-20260610
+          image: ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.4-20260827
           imagePullPolicy: IfNotPresent
           # `-f` reads the field list from the mounted ConfigMap (metrics.txt above).
           args: ["-k", "/var/lib/kubelet/pod-resources/kubelet.sock", "-f", "/etc/rdc-exporter/metrics.txt"]

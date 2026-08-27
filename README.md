@@ -33,7 +33,7 @@ Official release images are published to GitHub Container Registry (GHCR):
 
 | Image | ROCm version | Release date |
 | --- | --- | --- |
-| `ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.4-20260610` | 7.2.4 | 2026-06-10 |
+| `ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.4-20260827` | 7.2.4 | 2026-08-27 |
 | `ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.2-20260609` | 7.2.2 | 2026-06-09 |
 
 ## Quickstart on a GPU Node
@@ -46,7 +46,7 @@ docker run -dit --name rdc-exporter \
   --device=/dev/dri \
   --cap-add SYS_PTRACE \
   -p 5000:5000 \
-  ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.4-20260610
+  ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.4-20260827
 
 curl localhost:5000/metrics
 ```
