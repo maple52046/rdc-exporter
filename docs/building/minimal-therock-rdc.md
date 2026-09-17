@@ -8,24 +8,26 @@ and integration with this repository.
 ## Validation status
 
 The feature selection documented here is represented by the patched TheRock
-7.14 all-GPU minimal-RDC artifact used for the ROCm 7.14 exporter release. It
-was built from TheRock `418cd5f63abb7a604bad5874cd7b2e29334e640f` and
-rocm-systems `2b22ab0195cc1461cd9abf3b969e9dd7c10af350`, with the RDC clock-index
+7.14.1 all-GPU minimal-RDC artifact used for the ROCm 7.14.1 exporter release.
+It was built from TheRock `f51dc6c91e0d3214f22853fd5cb3f96dbc7d2c4b` and
+rocm-systems `ca887ee80abfb82671fe1d6d8da708a713438e05`, with the RDC clock-index
 bounds patch whose SHA-256 is
 `213ef61a7a564e4c9f664d48c42e6e6d4629602f926cae50a6591fba5875c299`.
 The exact-base patch and application/validation procedure are stored in
 [`patches/rdc/`](../../patches/rdc/README.md).
 The archive SHA-256 is
-`1ba6d19d0928b384ef30bbb993efbb98a6738bcbe80842fd9508daf181d48528`
+`0be3665633164f78c2d82fc13e9d105d2bdb87dd323f4be295946426260a3fef`;
+the patched `librdc.so.1.3` SHA-256 is
+`1096eafa7df169aa60c700954a68bd4a7f6c6aac4e99dcbc4f4a72a78c2abe74`;
 and it contains all 28 source-registered GPU targets. As a historical
 single-target reference, the preceding TheRock 7.13 `gfx950` build completed
 with 255 super-project steps in about 16 minutes on a large build server and
 produced a 9.0 GiB distribution; those timing and size figures do not describe
-the 7.14 all-GPU artifact.
+the 7.14.1 all-GPU artifact.
 
 The Debian 13 environment in this document is an adaptation for alignment with
 the final Debian 13 distroless image. The exact combination of Debian 13,
-TheRock 7.14, and this source-build recipe has **not yet been revalidated end to
+TheRock 7.14.1, and this source-build recipe has **not yet been revalidated end to
 end**; the container candidate uses the separately supplied prebuilt artifact.
 Treat the commands as the intended reproducible recipe and record any
 differences found during the next source build.
@@ -386,7 +388,7 @@ make prepare-runtime \
   THEROCK_ROCM_ROOT="$THEROCK_WORK/TheRock/build/dist/rocm"
 
 make image \
-  ROCM_VERSION=7.14.0 \
+  ROCM_VERSION=7.14.1 \
   ROCM_ARCHS=all-gpu \
   THEROCK_COMMIT="$(cat "$THEROCK_WORK/therock.commit")"
 ```
@@ -400,7 +402,7 @@ Run the static image verifier:
 
 ```bash
 make image-verify \
-  ROCM_VERSION=7.14.0 \
+  ROCM_VERSION=7.14.1 \
   ROCM_ARCHS=all-gpu \
   THEROCK_COMMIT="$(cat "$THEROCK_WORK/therock.commit")"
 ```
@@ -409,7 +411,7 @@ Resolve the image tag, start it on a GPU host, and verify both the exporter and
 direct `rocm-smi` execution:
 
 ```bash
-export IMAGE_TAG="$(make -s print-image ROCM_VERSION=7.14.0)"
+export IMAGE_TAG="$(make -s print-image ROCM_VERSION=7.14.1)"
 
 docker run -d --rm \
   --name rdc-exporter-therock \

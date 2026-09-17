@@ -1,7 +1,7 @@
 APP := rdc-exporter
 
 # The image assembles pre-built artifacts from the selected TheRock release.
-ROCM_VERSION       ?= 7.14.0
+ROCM_VERSION       ?= 7.14.1
 ROCM_ARCHS         ?= all-gpu
 THEROCK_COMMIT     ?=
 THEROCK_ROCM_ROOT  ?=

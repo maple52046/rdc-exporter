@@ -52,7 +52,7 @@ USER 0
 ENTRYPOINT ["/opt/rdc-exporter/bin/rdc-exporter"]
 
 # Profiling is supported, but PMC packet capacity is hardware-dependent. This
-# conservative MI355X-validated set keeps six profiling counters and includes
+# conservative gfx942-validated set keeps six profiling counters and includes
 # SM_ACTIVE. Users may replace CMD to select other fields, but should add
 # profiling fields gradually and watch for AQLProfile return code 4096.
 CMD ["--fields", "RDC_FI_GPU_CLOCK,RDC_FI_MEM_CLOCK,RDC_FI_MEMORY_TEMP,RDC_FI_GPU_TEMP,RDC_FI_POWER_USAGE,RDC_FI_GPU_UTIL,RDC_FI_GPU_MEMORY_USAGE,RDC_FI_GPU_MEMORY_TOTAL,RDC_FI_ECC_CORRECT_TOTAL,RDC_FI_ECC_UNCORRECT_TOTAL,RDC_FI_PROF_OCCUPANCY_PERCENT,RDC_FI_PROF_GPU_UTIL_PERCENT,RDC_FI_PROF_TENSOR_ACTIVE_PERCENT,RDC_FI_PROF_ACTIVE_CYCLES,RDC_FI_PROF_ELAPSED_CYCLES,RDC_FI_PROF_SM_ACTIVE"]

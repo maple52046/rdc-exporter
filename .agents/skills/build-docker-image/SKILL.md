@@ -21,16 +21,16 @@ Resolve these values before building; do not infer a release or commit:
 
 - `THEROCK_ROCM_ROOT`: extracted TheRock ROCm distribution with RDC.
 - `THEROCK_COMMIT`: full commit that produced that distribution.
-- `ROCM_VERSION` and `ROCM_ARCHS`: defaults are `7.14.0` and `all-gpu`; confirm
+- `ROCM_VERSION` and `ROCM_ARCHS`: defaults are `7.14.1` and `all-gpu`; confirm
   that they describe the supplied distribution.
 - Optional `IMAGE_TAG`; otherwise the Makefile derives the GHCR tag.
 
-The validated ROCm 7.14 baseline is the all-GPU artifact with TheRock commit
-`418cd5f63abb7a604bad5874cd7b2e29334e640f`, artifact SHA-256
-`1ba6d19d0928b384ef30bbb993efbb98a6738bcbe80842fd9508daf181d48528`,
+The validated ROCm 7.14.1 baseline is the all-GPU artifact with TheRock commit
+`f51dc6c91e0d3214f22853fd5cb3f96dbc7d2c4b`, artifact SHA-256
+`0be3665633164f78c2d82fc13e9d105d2bdb87dd323f4be295946426260a3fef`,
 and patched `librdc.so.1.3` SHA-256
-`ca86028c7c005ce34f9c01029b8a8786c244ec3fece8ea248dc690632a047852`.
-Do not substitute the earlier unpatched 7.14 artifact.
+`1096eafa7df169aa60c700954a68bd4a7f6c6aac4e99dcbc4f4a72a78c2abe74`.
+Do not substitute an unpatched 7.14 artifact.
 
 The exporter binary must be compiled against the same RDC headers and libraries
 that supply the final runtime. Its cgo directives currently require that build
@@ -103,7 +103,8 @@ $build-docker-image [--date <YYYYMMDD>] [--no-verify] [--push] [--tag <full-tag>
 
    Confirm `RDC_FI_PROF_SM_ACTIVE` exists and becomes non-zero under a suitable
    GPU workload. Watch logs for `Could not create PMC packets` or AQLProfile
-   return code 4096; reduce the simultaneous profiling field set if encountered.
+   return code 4096. Do not silently reduce a release's default profiling field
+   set; stop publication and report the incompatibility.
 
 7. With `--push`, push the resolved tag only after all requested checks pass:
 

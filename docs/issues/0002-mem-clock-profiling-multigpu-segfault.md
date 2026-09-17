@@ -8,7 +8,7 @@
 - **Affected ROCm builds:** 已在 ROCm 7.14.0、7.14.1、10.0.0 與 AMD RC repository 的
   10.1.0rc0 TheRock artifact 重現
 - **First investigated:** 2026-09-16
-- **Release impact:** 原始 artifact 阻擋發布；patched ROCm 7.14.0 artifact 已通過 release runtime gate
+- **Release impact:** 原始 artifact 阻擋發布；patched ROCm 7.14.0 與 7.14.1 artifacts 已通過 release runtime gate
 
 ## Executive summary
 
@@ -550,7 +550,7 @@ CI 不可只以 client process exit code 判定成功。
 ## Proposed upstream fix
 
 The exact-base `therock-7.14` backport used by this project is stored at
-[`patches/rdc/rdc-clock-index-bounds-therock-7.14-2b22ab01.patch`](../../patches/rdc/rdc-clock-index-bounds-therock-7.14-2b22ab01.patch),
+[`patches/rdc/rdc-clock-index-bounds-therock-7.14.1-ca887ee8.patch`](../../patches/rdc/rdc-clock-index-bounds-therock-7.14.1-ca887ee8.patch)
 with application and validation instructions in the adjacent
 [`README.md`](../../patches/rdc/README.md).
 
@@ -641,6 +641,35 @@ contract，不符合本次發布要求。
 
 因此不需修改 rdc-exporter 的 Go/cgo binding。idle GPU 的 memory-clock current index 無效時，
 patched RDC 會回報 no data（log 中可見 status 13 / AMD SMI code 40）而不再越界。
+
+### Patched ROCm 7.14.1 artifact validation（2026-09-17）
+
+ROCm 7.14.1 使用同一個 bounds fix、但以新的 exact source baseline 重新建置並獨立驗證：
+
+- Artifact：`rocm7.14.1-all-gpu-minimal-rdc-clock-index-fix.tar.gz`
+- Artifact SHA-256：`0be3665633164f78c2d82fc13e9d105d2bdb87dd323f4be295946426260a3fef`
+- TheRock commit：`f51dc6c91e0d3214f22853fd5cb3f96dbc7d2c4b`
+- rocm-systems commit：`ca887ee80abfb82671fe1d6d8da708a713438e05`
+- Patch SHA-256：`213ef61a7a564e4c9f664d48c42e6e6d4629602f926cae50a6591fba5875c299`
+- Patched `librdc.so.1.3` SHA-256：`1096eafa7df169aa60c700954a68bd4a7f6c6aac4e99dcbc4f4a72a78c2abe74`
+- `share/therock/dist_info.json`：28 個 GPU targets
+- runtime closure 最大 glibc requirement：`GLIBC_2.38`
+
+原生 RDC 的 `101,800` regression case 在 8 張 `gfx942` GPU 上完成 12 輪，daemon 保持存活。
+完整 16-field case 在 GPU 0 持續 FP32 workload 下完成 20 輪，`GPU_UTIL=100`，20 個 GPU 0
+samples 的 `VALUBusy` 全部非零，最高約 `98.944`。idle GPU 的 field 101 可顯示 `N/A`，並留下
+status 13 / AMD SMI code 40，但沒有 connection refusal、segfault、PMC packet 或 AQLProfile
+4096 錯誤。
+
+以相同 headers/libraries 編譯的 exporter 通過 `go test ./...`，全新 runtime root 無 broken
+symlink，candidate image 的 Docker local size 是 204,845,060 bytes（195.35 MiB）。image-local
+`rocm-smi` 找到 8 張 MI308X/gfx942 GPU；兩次 qualified scrape 都恰有 128 個預設 GPU
+samples，GPU 0 `gpu_util=100`，`valubusy` 從 `65.54684016745742` 更新為
+`69.32468342459957`，`active_cycles` 也持續前進。exporter logs 無 loader、PMC、AQLProfile、
+panic 或 segfault 錯誤。
+
+7.14.1 的結果再次確認問題與修復都位於 RDC/TheRock；rdc-exporter 不需要 Go/cgo binding
+調整，也不需要刪減既有 10 telemetry + 6 profiling fields。
 
 ## Evidence locations on tainan-ci
 

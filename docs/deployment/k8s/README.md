@@ -117,7 +117,8 @@ Customize via a values file or `--set` flags; the install commands are in Sectio
 
 | Image tag | ROCm version | Release date |
 | --- | --- | --- |
-| `ghcr.io/maple52046/rdc-exporter:v1-rocm7.14.0-20260916` | 7.14.0 | 2026-09-16 (latest) |
+| `ghcr.io/maple52046/rdc-exporter:v1-rocm7.14.1-20260917` | 7.14.1 | 2026-09-17 (latest) |
+| `ghcr.io/maple52046/rdc-exporter:v1-rocm7.14.0-20260916` | 7.14.0 | 2026-09-16 |
 | `ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.4-20260827` | 7.2.4 | 2026-08-27 |
 | `ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.2-20260609` | 7.2.2 | 2026-06-09 |
 
@@ -175,7 +176,7 @@ spec:
       hostNetwork: true
       containers:
         - name: rdc-exporter
-          image: ghcr.io/maple52046/rdc-exporter:v1-rocm7.14.0-20260916
+          image: ghcr.io/maple52046/rdc-exporter:v1-rocm7.14.1-20260917
           imagePullPolicy: IfNotPresent
           # -k specifies the kubelet pod-resources socket; -f specifies the metrics list provided by the ConfigMap
           args:

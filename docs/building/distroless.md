@@ -21,20 +21,19 @@ For the complete Debian 13 source-build procedure, see
   the CGO exporter binary with `make build`.
 - Docker with BuildKit enabled.
 
-The ROCm 7.14.0 release input is a patched all-GPU TheRock distribution. Runtime
+The ROCm 7.14.1 release input is a patched all-GPU TheRock distribution. Runtime
 validation was performed on eight `gfx942` GPUs. Do not mix the
 exporter build headers, runtime root, or labels from different TheRock builds.
 
 The validated artifact is:
 
-- Build-host path: `/dockerdata/tasks/149-build-the-rock/7.14/delivery/rocm7.14.0-all-gpu-minimal-rdc-clock-index-fix-glibc2.38.tar.gz`
-- S3 destination: `s3://rocm/7.14.0/20260917/rocm7.14.0-all-gpu-minimal-rdc-clock-index-fix-glibc2.38.tar.gz`
-- SHA-256: `1ba6d19d0928b384ef30bbb993efbb98a6738bcbe80842fd9508daf181d48528`
-- TheRock commit: `418cd5f63abb7a604bad5874cd7b2e29334e640f`
-- rocm-systems commit: `2b22ab0195cc1461cd9abf3b969e9dd7c10af350`
+- Build-host path: `/dockerdata/tasks/148-rdc-clock-index/therock-7.14.1/candidate/rocm7.14.1-all-gpu-minimal-rdc-clock-index-fix.tar.gz`
+- SHA-256: `0be3665633164f78c2d82fc13e9d105d2bdb87dd323f4be295946426260a3fef`
+- TheRock commit: `f51dc6c91e0d3214f22853fd5cb3f96dbc7d2c4b`
+- rocm-systems commit: `ca887ee80abfb82671fe1d6d8da708a713438e05`
 - RDC clock-index patch SHA-256: `213ef61a7a564e4c9f664d48c42e6e6d4629602f926cae50a6591fba5875c299`
-- Repository patch: [`patches/rdc/rdc-clock-index-bounds-therock-7.14-2b22ab01.patch`](../../patches/rdc/rdc-clock-index-bounds-therock-7.14-2b22ab01.patch)
-- Patched `librdc.so.1.3` SHA-256: `ca86028c7c005ce34f9c01029b8a8786c244ec3fece8ea248dc690632a047852`
+- Repository patch: [`patches/rdc/rdc-clock-index-bounds-therock-7.14.1-ca887ee8.patch`](../../patches/rdc/rdc-clock-index-bounds-therock-7.14.1-ca887ee8.patch)
+- Patched `librdc.so.1.3` SHA-256: `1096eafa7df169aa60c700954a68bd4a7f6c6aac4e99dcbc4f4a72a78c2abe74`
 - Maximum measured glibc requirement: `GLIBC_2.38`
 
 Its `share/therock/dist_info.json` records 28 GPU targets. The compact
@@ -79,7 +78,7 @@ that path:
 make build
 
 make image \
-  ROCM_VERSION=7.14.0 \
+  ROCM_VERSION=7.14.1 \
   ROCM_ARCHS=all-gpu \
   THEROCK_COMMIT=<full-therock-commit>
 ```
@@ -96,7 +95,7 @@ when changing them.
 
 ```bash
 make image-verify \
-  ROCM_VERSION=7.14.0 \
+  ROCM_VERSION=7.14.1 \
   ROCM_ARCHS=all-gpu \
   THEROCK_COMMIT=<full-therock-commit>
 ```
@@ -122,8 +121,10 @@ docker exec rdc-exporter rocm-smi --showproductname --showuse
 ```
 
 The default field list contains 10 telemetry fields and six profiling fields,
-including `RDC_FI_PROF_SM_ACTIVE`. On the MI355X baseline it produced 128
-samples across eight GPUs, and `SM_ACTIVE` became non-zero under a VALU workload.
+including `RDC_FI_PROF_SM_ACTIVE`. On the ROCm 7.14.1 MI308X (`gfx942`)
+baseline it produced 128 samples across eight GPUs. Under a sustained GPU 0
+VALU workload, `gpu_util` was 100 and `valubusy` changed from
+`65.54684016745742` to `69.32468342459957` across qualified scrapes.
 
 Profiling fields consume hardware performance-monitor counters. The runtime
 supports other `RDC_FI_PROF_*` fields, but adding too many to one field group can
@@ -145,5 +146,5 @@ Python plus the `rocm-smi` closure added about 53.74 MiB. The additional
 366.67 MiB in the final image is primarily the COMGR/LLVM/rocprofiler runtime
 needed to keep profiling metrics available.
 
-The validated patched ROCm 7.14 all-GPU candidate was 204,844,862 bytes
+The validated patched ROCm 7.14.1 all-GPU candidate was 204,845,060 bytes
 (195.35 MiB) by Docker's local size report.
