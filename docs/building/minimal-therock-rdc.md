@@ -7,17 +7,28 @@ and integration with this repository.
 
 ## Validation status
 
-The feature selection documented here has been validated with TheRock 7.13,
-`gfx950`, and Ubuntu 24.04. That build completed with 255 super-project steps in
-about 16 minutes on a large build server and produced a 9.0 GiB TheRock
-distribution.
+The feature selection documented here is represented by the patched TheRock
+7.14 all-GPU minimal-RDC artifact used for the ROCm 7.14 exporter release. It
+was built from TheRock `418cd5f63abb7a604bad5874cd7b2e29334e640f` and
+rocm-systems `2b22ab0195cc1461cd9abf3b969e9dd7c10af350`, with the RDC clock-index
+bounds patch whose SHA-256 is
+`213ef61a7a564e4c9f664d48c42e6e6d4629602f926cae50a6591fba5875c299`.
+The exact-base patch and application/validation procedure are stored in
+[`patches/rdc/`](../../patches/rdc/README.md).
+The archive SHA-256 is
+`1ba6d19d0928b384ef30bbb993efbb98a6738bcbe80842fd9508daf181d48528`
+and it contains all 28 source-registered GPU targets. As a historical
+single-target reference, the preceding TheRock 7.13 `gfx950` build completed
+with 255 super-project steps in about 16 minutes on a large build server and
+produced a 9.0 GiB distribution; those timing and size figures do not describe
+the 7.14 all-GPU artifact.
 
 The Debian 13 environment in this document is an adaptation for alignment with
-the final Debian 13 distroless image. Debian 13 has been used successfully for
-other TheRock 7.13 builds, but the exact combination of Debian 13 plus the
-minimal-RDC recipe has **not yet been validated end to end**. Treat the commands
-as the intended reproducible recipe and record any differences found during the
-first build.
+the final Debian 13 distroless image. The exact combination of Debian 13,
+TheRock 7.14, and this source-build recipe has **not yet been revalidated end to
+end**; the container candidate uses the separately supplied prebuilt artifact.
+Treat the commands as the intended reproducible recipe and record any
+differences found during the next source build.
 
 ## What "minimal" means
 
@@ -30,7 +41,7 @@ enables RDC:
 ```
 
 TheRock recursively enables everything declared by RDC's `REQUIRES` graph. The
-expected feature closure for TheRock 7.13 is:
+expected feature closure for TheRock 7.14 is:
 
 ```text
 SYSDEPS SYSDEPS_LIBMNL SYSDEPS_LIBNL BASE COMPILER CORE_AMDSMI
@@ -149,12 +160,12 @@ container, also pass:
 
 All remaining commands in sections 3 through 7 run inside the container.
 
-## 3. Fetch TheRock 7.13 sources
+## 3. Fetch TheRock 7.14 sources
 
 Pin a release tag or full commit. Do not build an unrecorded moving branch.
 
 ```bash
-export THEROCK_REF=therock-7.13
+export THEROCK_REF=therock-7.14
 
 git clone --depth 1 --branch "$THEROCK_REF" \
   https://github.com/ROCm/TheRock.git /work/TheRock
@@ -200,9 +211,9 @@ python -m pip install --upgrade pip
 python -m pip install -r /work/TheRock/requirements.txt
 ```
 
-TheRock 7.13 accepts the Debian 13 Python environment. TheRock 7.14 and later
-may impose different Python ABI requirements; inspect the selected tag's
-official build container before changing `THEROCK_REF`.
+Use the Python versions and packages accepted by TheRock 7.14's pinned
+requirements. Inspect the selected tag's official build container and pinned
+requirements again before changing `THEROCK_REF` to a later release.
 
 ## 5. Configure the minimal RDC feature set
 
@@ -375,8 +386,8 @@ make prepare-runtime \
   THEROCK_ROCM_ROOT="$THEROCK_WORK/TheRock/build/dist/rocm"
 
 make image \
-  ROCM_VERSION=7.13.0 \
-  ROCM_ARCHS=gfx950 \
+  ROCM_VERSION=7.14.0 \
+  ROCM_ARCHS=all-gpu \
   THEROCK_COMMIT="$(cat "$THEROCK_WORK/therock.commit")"
 ```
 
@@ -389,8 +400,8 @@ Run the static image verifier:
 
 ```bash
 make image-verify \
-  ROCM_VERSION=7.13.0 \
-  ROCM_ARCHS=gfx950 \
+  ROCM_VERSION=7.14.0 \
+  ROCM_ARCHS=all-gpu \
   THEROCK_COMMIT="$(cat "$THEROCK_WORK/therock.commit")"
 ```
 
@@ -398,7 +409,7 @@ Resolve the image tag, start it on a GPU host, and verify both the exporter and
 direct `rocm-smi` execution:
 
 ```bash
-export IMAGE_TAG="$(make -s print-image ROCM_VERSION=7.13.0)"
+export IMAGE_TAG="$(make -s print-image ROCM_VERSION=7.14.0)"
 
 docker run -d --rm \
   --name rdc-exporter-therock \

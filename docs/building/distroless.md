@@ -21,9 +21,32 @@ For the complete Debian 13 source-build procedure, see
   the CGO exporter binary with `make build`.
 - Docker with BuildKit enabled.
 
-The tested baseline is TheRock 7.13 for `gfx950` on 8 AMD Instinct MI355X GPUs.
-Do not mix the exporter build headers, runtime root, or labels from different
-TheRock builds.
+The ROCm 7.14.0 release input is a patched all-GPU TheRock distribution. Runtime
+validation was performed on eight `gfx942` GPUs. Do not mix the
+exporter build headers, runtime root, or labels from different TheRock builds.
+
+The validated artifact is:
+
+- Build-host path: `/dockerdata/tasks/149-build-the-rock/7.14/delivery/rocm7.14.0-all-gpu-minimal-rdc-clock-index-fix-glibc2.38.tar.gz`
+- S3 destination: `s3://rocm/7.14.0/20260917/rocm7.14.0-all-gpu-minimal-rdc-clock-index-fix-glibc2.38.tar.gz`
+- SHA-256: `1ba6d19d0928b384ef30bbb993efbb98a6738bcbe80842fd9508daf181d48528`
+- TheRock commit: `418cd5f63abb7a604bad5874cd7b2e29334e640f`
+- rocm-systems commit: `2b22ab0195cc1461cd9abf3b969e9dd7c10af350`
+- RDC clock-index patch SHA-256: `213ef61a7a564e4c9f664d48c42e6e6d4629602f926cae50a6591fba5875c299`
+- Repository patch: [`patches/rdc/rdc-clock-index-bounds-therock-7.14-2b22ab01.patch`](../../patches/rdc/rdc-clock-index-bounds-therock-7.14-2b22ab01.patch)
+- Patched `librdc.so.1.3` SHA-256: `ca86028c7c005ce34f9c01029b8a8786c244ec3fece8ea248dc690632a047852`
+- Maximum measured glibc requirement: `GLIBC_2.38`
+
+Its `share/therock/dist_info.json` records 28 GPU targets. The compact
+`ROCM_ARCHS=all-gpu` image label refers to that complete target set; it does not
+change the container platform from `linux/amd64`.
+
+The artifact includes the RDC clock-index bounds fix documented in
+[`docs/issues/0002-mem-clock-profiling-multigpu-segfault.md`](../issues/0002-mem-clock-profiling-multigpu-segfault.md).
+Native RDC and the final image both completed the combined default set on all
+eight GPUs. The exporter produced 128 GPU series and non-zero, changing
+`RDC_FI_PROF_SM_ACTIVE` values under load. Idle memory-clock samples can be
+reported as unavailable, but they no longer terminate RDC.
 
 ## Prepare the runtime root
 
@@ -56,8 +79,8 @@ that path:
 make build
 
 make image \
-  ROCM_VERSION=7.13.0 \
-  ROCM_ARCHS=gfx950 \
+  ROCM_VERSION=7.14.0 \
+  ROCM_ARCHS=all-gpu \
   THEROCK_COMMIT=<full-therock-commit>
 ```
 
@@ -73,8 +96,8 @@ when changing them.
 
 ```bash
 make image-verify \
-  ROCM_VERSION=7.13.0 \
-  ROCM_ARCHS=gfx950 \
+  ROCM_VERSION=7.14.0 \
+  ROCM_ARCHS=all-gpu \
   THEROCK_COMMIT=<full-therock-commit>
 ```
 
@@ -110,7 +133,7 @@ counters gradually and monitor freshness as described in
 
 ## Size baseline
 
-Docker's local unpacked size for the tested images was:
+Docker's local unpacked size for the historical ROCm 7.13 images was:
 
 | Variant | Size |
 | --- | ---: |
@@ -121,3 +144,6 @@ Docker's local unpacked size for the tested images was:
 Python plus the `rocm-smi` closure added about 53.74 MiB. The additional
 366.67 MiB in the final image is primarily the COMGR/LLVM/rocprofiler runtime
 needed to keep profiling metrics available.
+
+The validated patched ROCm 7.14 all-GPU candidate was 204,844,862 bytes
+(195.35 MiB) by Docker's local size report.

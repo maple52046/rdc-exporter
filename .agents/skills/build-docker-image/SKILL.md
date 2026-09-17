@@ -21,9 +21,16 @@ Resolve these values before building; do not infer a release or commit:
 
 - `THEROCK_ROCM_ROOT`: extracted TheRock ROCm distribution with RDC.
 - `THEROCK_COMMIT`: full commit that produced that distribution.
-- `ROCM_VERSION` and `ROCM_ARCHS`: defaults are `7.13.0` and `gfx950`; confirm
+- `ROCM_VERSION` and `ROCM_ARCHS`: defaults are `7.14.0` and `all-gpu`; confirm
   that they describe the supplied distribution.
 - Optional `IMAGE_TAG`; otherwise the Makefile derives the GHCR tag.
+
+The validated ROCm 7.14 baseline is the all-GPU artifact with TheRock commit
+`418cd5f63abb7a604bad5874cd7b2e29334e640f`, artifact SHA-256
+`1ba6d19d0928b384ef30bbb993efbb98a6738bcbe80842fd9508daf181d48528`,
+and patched `librdc.so.1.3` SHA-256
+`ca86028c7c005ce34f9c01029b8a8786c244ec3fece8ea248dc690632a047852`.
+Do not substitute the earlier unpatched 7.14 artifact.
 
 The exporter binary must be compiled against the same RDC headers and libraries
 that supply the final runtime. Its cgo directives currently require that build
