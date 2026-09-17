@@ -1,5 +1,5 @@
 diff --git a/projects/rdc/rdc_libs/rdc/src/RdcMetricFetcherImpl.cc b/projects/rdc/rdc_libs/rdc/src/RdcMetricFetcherImpl.cc
-index 17bbb92bd7..d06c4b09ad 100644
+index 54253d652d..b811db22b5 100644
 --- a/projects/rdc/rdc_libs/rdc/src/RdcMetricFetcherImpl.cc
 +++ b/projects/rdc/rdc_libs/rdc/src/RdcMetricFetcherImpl.cc
 @@ -894,7 +894,12 @@ rdc_status_t RdcMetricFetcherImpl::fetch_gpu_field_(uint32_t gpu_index, rdc_fiel

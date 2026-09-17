@@ -3,9 +3,9 @@ name: rdc-exporter
 description: A Helm chart that deploys rdc-exporter as a DaemonSet to collect AMD GPU metrics via RDC and expose them for Prometheus.
 type: application
 # version is the chart version; bump it on chart changes.
-version: 0.1.2
+version: 0.1.3
 # appVersion tracks the default rdc-exporter container image tag used when image.tag is empty.
-appVersion: "v1-rocm7.14.1-20260917"
+appVersion: "v1-rocm10.0.0-20260917"
 keywords:
   - amd
   - gpu

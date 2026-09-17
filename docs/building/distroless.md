@@ -21,20 +21,21 @@ For the complete Debian 13 source-build procedure, see
   the CGO exporter binary with `make build`.
 - Docker with BuildKit enabled.
 
-The ROCm 7.14.1 release input is a patched all-GPU TheRock distribution. Runtime
+The ROCm 10.0.0 release input is a patched all-GPU TheRock distribution. Runtime
 validation was performed on eight `gfx942` GPUs. Do not mix the
 exporter build headers, runtime root, or labels from different TheRock builds.
 
 The validated artifact is:
 
-- Build-host path: `/dockerdata/tasks/148-rdc-clock-index/therock-7.14.1/candidate/rocm7.14.1-all-gpu-minimal-rdc-clock-index-fix.tar.gz`
-- SHA-256: `0be3665633164f78c2d82fc13e9d105d2bdb87dd323f4be295946426260a3fef`
-- TheRock commit: `f51dc6c91e0d3214f22853fd5cb3f96dbc7d2c4b`
-- rocm-systems commit: `ca887ee80abfb82671fe1d6d8da708a713438e05`
-- RDC clock-index patch SHA-256: `213ef61a7a564e4c9f664d48c42e6e6d4629602f926cae50a6591fba5875c299`
-- Repository patch: [`patches/rdc/rdc-clock-index-bounds-therock-7.14.1-ca887ee8.patch`](../../patches/rdc/rdc-clock-index-bounds-therock-7.14.1-ca887ee8.patch)
-- Patched `librdc.so.1.3` SHA-256: `1096eafa7df169aa60c700954a68bd4a7f6c6aac4e99dcbc4f4a72a78c2abe74`
+- Build-host path: `/dockerdata/tasks/149-build-the-rock/10.0/delivery/rocm10.0.0-all-gpu-minimal-rdc-clock-index-fix-no-emulation-glibc2.38.tar.gz`
+- SHA-256: `a1e075511bb479e9baae21abc6786d52a60bf7dc0c7a2946c64f891a43179788`
+- TheRock commit: `16adc4d875fd4f65ea23c7c84e1c66706fde3047`
+- rocm-systems commit: `6b0e43f341195e203754e08f850e437ff2fc09f9`
+- RDC clock-index patch SHA-256: `bd6f313b66a8e8ccf276e1a33c0d12dcd04d8c9e6d1866239b8712511619519a`
+- Repository patch: [`patches/rdc/rdc-clock-index-bounds-therock-10.0-6b0e43f3.patch`](../../patches/rdc/rdc-clock-index-bounds-therock-10.0-6b0e43f3.patch)
+- Patched `librdc.so.1.3` SHA-256: `7c764ab6c23de64ff45e88c9b65be5073502e889192626c4e9679496a065402f`
 - Maximum measured glibc requirement: `GLIBC_2.38`
+- GPU emulation support: disabled
 
 Its `share/therock/dist_info.json` records 28 GPU targets. The compact
 `ROCM_ARCHS=all-gpu` image label refers to that complete target set; it does not
@@ -43,9 +44,10 @@ change the container platform from `linux/amd64`.
 The artifact includes the RDC clock-index bounds fix documented in
 [`docs/issues/0002-mem-clock-profiling-multigpu-segfault.md`](../issues/0002-mem-clock-profiling-multigpu-segfault.md).
 Native RDC and the final image both completed the combined default set on all
-eight GPUs. The exporter produced 128 GPU series and non-zero, changing
-`RDC_FI_PROF_SM_ACTIVE` values under load. Idle memory-clock samples can be
-reported as unavailable, but they no longer terminate RDC.
+eight GPUs. Native RDC produced non-zero, changing `RDC_FI_PROF_SM_ACTIVE`
+values under load; final-image measurements are recorded below. Idle
+memory-clock samples can be reported as unavailable, but they no longer
+terminate RDC.
 
 ## Prepare the runtime root
 
@@ -78,7 +80,7 @@ that path:
 make build
 
 make image \
-  ROCM_VERSION=7.14.1 \
+  ROCM_VERSION=10.0.0 \
   ROCM_ARCHS=all-gpu \
   THEROCK_COMMIT=<full-therock-commit>
 ```
@@ -91,11 +93,27 @@ The distroless base and Debian native-runtime builder are pinned by digest in
 the Dockerfile. Update those pins deliberately and repeat the GPU verification
 when changing them.
 
+During the 2026-09-17 ROCm 10.0.0 qualification, the build host could not reach
+the Debian package mirror used by the pinned native-runtime stage. The release
+candidate therefore reused the three native runtime files previously produced
+from that same pinned Debian base. Their content was byte-identical in the
+published ROCm 7.14.0 and 7.14.1 images:
+
+| File | SHA-256 |
+| --- | --- |
+| `libatomic.so.1` | `9558489f171274c220104894258f483055853ed8a23d4ff754c850ce55765aa2` |
+| `libstdc++.so.6` | `972bb2a18b71140dab0240f8a1f68ab3fb1d56bcd4c4f824a91b70888faf5a00` |
+| `libgcc_s.so.1` | `30c61ab012a4241bed033725a09b61f5fdd3bb7df95ee852d0b096520524c7af` |
+
+The repository Dockerfile and its pinned base digests were not changed. A
+normal connected rebuild should continue to use `make image`; the offline
+assembly was a release-host network workaround, not a new build contract.
+
 ## Static image verification
 
 ```bash
 make image-verify \
-  ROCM_VERSION=7.14.1 \
+  ROCM_VERSION=10.0.0 \
   ROCM_ARCHS=all-gpu \
   THEROCK_COMMIT=<full-therock-commit>
 ```
@@ -121,10 +139,18 @@ docker exec rdc-exporter rocm-smi --showproductname --showuse
 ```
 
 The default field list contains 10 telemetry fields and six profiling fields,
-including `RDC_FI_PROF_SM_ACTIVE`. On the ROCm 7.14.1 MI308X (`gfx942`)
-baseline it produced 128 samples across eight GPUs. Under a sustained GPU 0
-VALU workload, `gpu_util` was 100 and `valubusy` changed from
-`65.54684016745742` to `69.32468342459957` across qualified scrapes.
+including `RDC_FI_PROF_SM_ACTIVE`. On the ROCm 10.0.0 MI308X (`gfx942`)
+baseline, native RDC completed 20 rounds for every GPU with the full field set.
+Under a sustained GPU 0 VALU workload, native `GPU_UTIL` was 100 and native
+`VALUBusy` ranged from 21.331% to 29.652% while the workload was active.
+
+The candidate image produced 128 samples (16 fields by eight GPUs) on every
+qualified scrape, and image-local `rocm-smi` found all eight GPUs. Across two
+RDC update windows under load, GPU 0 `valubusy` changed from
+`29.28883367251129` to `29.50381430223124`, while `active_cycles` changed from
+`57,122,976` to `57,172,185` and `gpu_util` remained 100. The default watch
+period is 10 seconds, so two HTTP scrapes inside one period can legitimately
+show the same cached sample.
 
 Profiling fields consume hardware performance-monitor counters. The runtime
 supports other `RDC_FI_PROF_*` fields, but adding too many to one field group can
@@ -146,5 +172,6 @@ Python plus the `rocm-smi` closure added about 53.74 MiB. The additional
 366.67 MiB in the final image is primarily the COMGR/LLVM/rocprofiler runtime
 needed to keep profiling metrics available.
 
-The validated patched ROCm 7.14.1 all-GPU candidate was 204,845,060 bytes
-(195.35 MiB) by Docker's local size report.
+The validated patched ROCm 10.0.0 all-GPU candidate was 211,029,557 bytes
+(201.25 MiB) by Docker's local size report and is published as
+`ghcr.io/maple52046/rdc-exporter:v1-rocm10.0.0-20260917`.

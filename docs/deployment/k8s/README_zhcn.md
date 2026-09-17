@@ -117,7 +117,8 @@ Chart 位于 [`charts/rdc-exporter`](../../../charts/rdc-exporter)，详见其 [
 
 | 镜像标签（image tag） | ROCm 版本 | 发布日期 |
 | --- | --- | --- |
-| `ghcr.io/maple52046/rdc-exporter:v1-rocm7.14.1-20260917` | 7.14.1 | 2026-09-17（最新） |
+| `ghcr.io/maple52046/rdc-exporter:v1-rocm10.0.0-20260917` | 10.0.0 | 2026-09-17（最新） |
+| `ghcr.io/maple52046/rdc-exporter:v1-rocm7.14.1-20260917` | 7.14.1 | 2026-09-17 |
 | `ghcr.io/maple52046/rdc-exporter:v1-rocm7.14.0-20260916` | 7.14.0 | 2026-09-16 |
 | `ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.4-20260827` | 7.2.4 | 2026-08-27 |
 | `ghcr.io/maple52046/rdc-exporter:v1-rocm7.2.2-20260609` | 7.2.2 | 2026-06-09 |
@@ -176,7 +177,7 @@ spec:
       hostNetwork: true
       containers:
         - name: rdc-exporter
-          image: ghcr.io/maple52046/rdc-exporter:v1-rocm7.14.1-20260917
+          image: ghcr.io/maple52046/rdc-exporter:v1-rocm10.0.0-20260917
           imagePullPolicy: IfNotPresent
           # -k 指定 kubelet pod-resources socket；-f 指定 ConfigMap 提供的指标清单
           args:

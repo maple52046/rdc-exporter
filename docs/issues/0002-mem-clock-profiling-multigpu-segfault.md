@@ -8,7 +8,7 @@
 - **Affected ROCm builds:** 已在 ROCm 7.14.0、7.14.1、10.0.0 與 AMD RC repository 的
   10.1.0rc0 TheRock artifact 重現
 - **First investigated:** 2026-09-16
-- **Release impact:** 原始 artifact 阻擋發布；patched ROCm 7.14.0 與 7.14.1 artifacts 已通過 release runtime gate
+- **Release impact:** 原始 artifact 阻擋發布；patched ROCm 7.14.0、7.14.1 與 10.0.0 artifacts 已通過 release runtime gate
 
 ## Executive summary
 
@@ -549,8 +549,8 @@ CI 不可只以 client process exit code 判定成功。
 
 ## Proposed upstream fix
 
-The exact-base `therock-7.14` backport used by this project is stored at
-[`patches/rdc/rdc-clock-index-bounds-therock-7.14.1-ca887ee8.patch`](../../patches/rdc/rdc-clock-index-bounds-therock-7.14.1-ca887ee8.patch)
+The current exact-base `therock-10.0` backport used by this project is stored at
+[`patches/rdc/rdc-clock-index-bounds-therock-10.0-6b0e43f3.patch`](../../patches/rdc/rdc-clock-index-bounds-therock-10.0-6b0e43f3.patch)
 with application and validation instructions in the adjacent
 [`README.md`](../../patches/rdc/README.md).
 
@@ -603,7 +603,7 @@ contract，不符合本次發布要求。
 
 ## Release decision
 
-原始 unpatched artifact 在下列條件完成前不得建立或推送 ROCm 7.14 release tag/image：
+原始 unpatched artifact 在下列條件完成前不得建立或推送對應 release tag/image：
 
 1. 使用 patched/fixed RDC，保留原始 10 telemetry + 6 profiling fields。
 2. 8 張 gfx942 都能持續輸出 samples。
@@ -670,6 +670,43 @@ panic 或 segfault 錯誤。
 
 7.14.1 的結果再次確認問題與修復都位於 RDC/TheRock；rdc-exporter 不需要 Go/cgo binding
 調整，也不需要刪減既有 10 telemetry + 6 profiling fields。
+
+### Patched ROCm 10.0.0 artifact validation（2026-09-17）
+
+ROCm 10.0.0 以新的 exact source baseline 套用相同 bounds fix，並明確停用 GPU emulation：
+
+- Artifact：`rocm10.0.0-all-gpu-minimal-rdc-clock-index-fix-no-emulation-glibc2.38.tar.gz`
+- Artifact SHA-256：`a1e075511bb479e9baae21abc6786d52a60bf7dc0c7a2946c64f891a43179788`
+- TheRock commit：`16adc4d875fd4f65ea23c7c84e1c66706fde3047`
+- rocm-systems commit：`6b0e43f341195e203754e08f850e437ff2fc09f9`
+- Patch SHA-256：`bd6f313b66a8e8ccf276e1a33c0d12dcd04d8c9e6d1866239b8712511619519a`
+- Patched `librdc.so.1.3` SHA-256：`7c764ab6c23de64ff45e88c9b65be5073502e889192626c4e9679496a065402f`
+- `share/therock/dist_info.json`：28 個 GPU targets
+- 完整 distribution 最大 glibc requirement：`GLIBC_2.38`
+
+artifact 內 `rdci`、`rdcd`、`librdc.so.1.3` 沒有 unresolved dynamic libraries，artifact
+內的 `rocm-smi` 找到 8 張 MI308X/gfx942 GPU。原生 RDC 驗證結果如下：
+
+- `101,800` regression case 完成 12 輪，8 張 GPU 各有 12 rows，daemon 在 client
+  結束後仍存活。
+- 完整 16-field case 在 GPU 0 持續 HIP workload 下完成 20 輪，8 張 GPU 各有 20
+  rows；workload 期間 `GPU_UTIL=100`，`VALUBusy` 為 21.331–29.652%。
+- idle GPU 的 field 101 可顯示 `N/A` 並留下 status 13 / AMD SMI code 40，但 daemon
+  保持存活，其他 fields 持續更新。
+- client、server 與 kernel logs 無 connection refusal、segfault、PMC packet failure 或
+  AQLProfile return code 4096。
+
+未修改的既有 exporter source 以 Go 1.26.3 對同一份 ROCm 10.0.0 headers/libraries 完成
+`go test ./...` 與 CGO build，證明這次升級不需要修改 Go/cgo binding。全新 runtime root
+為 572,271,314 bytes、沒有 broken symlink；final distroless candidate 為 211,029,557 bytes。
+image-local `rocm-smi` 找到全部 8 張 GPU，每次 qualified scrape 都恰有 128 個 samples。
+
+exporter 的 RDC watch period 是 10 秒；兩個只相隔 4 秒的初始 workload scrapes 因讀到同一份
+cache 而完全相同，這不是凍結。讓 workload 跨越兩個 update windows 後，GPU 0
+`valubusy` 從 `29.28883367251129` 更新為 `29.50381430223124`，`active_cycles` 從
+`57,122,976` 更新為 `57,172,185`，兩次的 `gpu_util` 都是 100。exporter logs 無 loader、
+PMC、AQLProfile、panic 或 segfault 錯誤，因此 10.0.0 同樣不需修改 Go/cgo binding 或刪減
+預設 fields。
 
 ## Evidence locations on tainan-ci
 

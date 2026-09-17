@@ -1,7 +1,7 @@
-# RDC clock-index bounds patch for TheRock 7.14.1
+# RDC clock-index bounds patch for TheRock 10.0
 
 This directory contains the exact-base backport used to build the patched ROCm
-7.14.1 TheRock distribution for this project. The patch changes ROCm's RDC
+10.0.0 TheRock distribution for this project. The patch changes ROCm's RDC
 source; it is not applied to the Go exporter source or to an
 already-built runtime image.
 
@@ -9,11 +9,11 @@ already-built runtime image.
 
 | Item | Value |
 | --- | --- |
-| TheRock ref | `therock-7.14` |
-| TheRock commit | `f51dc6c91e0d3214f22853fd5cb3f96dbc7d2c4b` |
-| rocm-systems commit | `ca887ee80abfb82671fe1d6d8da708a713438e05` |
-| Patch | [`rdc-clock-index-bounds-therock-7.14.1-ca887ee8.patch`](rdc-clock-index-bounds-therock-7.14.1-ca887ee8.patch) |
-| Patch SHA-256 | `213ef61a7a564e4c9f664d48c42e6e6d4629602f926cae50a6591fba5875c299` |
+| TheRock ref | `therock-10.0` |
+| TheRock commit | `16adc4d875fd4f65ea23c7c84e1c66706fde3047` |
+| rocm-systems commit | `6b0e43f341195e203754e08f850e437ff2fc09f9` |
+| Patch | [`rdc-clock-index-bounds-therock-10.0-6b0e43f3.patch`](rdc-clock-index-bounds-therock-10.0-6b0e43f3.patch) |
+| Patch SHA-256 | `bd6f313b66a8e8ccf276e1a33c0d12dcd04d8c9e6d1866239b8712511619519a` |
 | Patched source | `projects/rdc/rdc_libs/rdc/src/RdcMetricFetcherImpl.cc` |
 | Validated hardware | 8× AMD Instinct `gfx942` GPUs |
 
@@ -75,11 +75,11 @@ other fields.
 Fetch the exact TheRock source and its pinned component repositories first:
 
 ```bash
-git clone --branch therock-7.14 \
+git clone --branch therock-10.0 \
   https://github.com/ROCm/TheRock.git /work/TheRock
 
 git -C /work/TheRock checkout \
-  f51dc6c91e0d3214f22853fd5cb3f96dbc7d2c4b
+  16adc4d875fd4f65ea23c7c84e1c66706fde3047
 
 (
   cd /work/TheRock
@@ -87,9 +87,9 @@ git -C /work/TheRock checkout \
 )
 
 test "$(git -C /work/TheRock rev-parse HEAD)" = \
-  f51dc6c91e0d3214f22853fd5cb3f96dbc7d2c4b
+  16adc4d875fd4f65ea23c7c84e1c66706fde3047
 test "$(git -C /work/TheRock/rocm-systems rev-parse HEAD)" = \
-  ca887ee80abfb82671fe1d6d8da708a713438e05
+  6b0e43f341195e203754e08f850e437ff2fc09f9
 test -z "$(git -C /work/TheRock/rocm-systems status --short)"
 ```
 
@@ -98,10 +98,10 @@ checksum, and apply it inside the fetched rocm-systems repository:
 
 ```bash
 export RDC_EXPORTER_ROOT=/path/to/rdc-exporter
-export RDC_PATCH="$RDC_EXPORTER_ROOT/patches/rdc/rdc-clock-index-bounds-therock-7.14.1-ca887ee8.patch"
+export RDC_PATCH="$RDC_EXPORTER_ROOT/patches/rdc/rdc-clock-index-bounds-therock-10.0-6b0e43f3.patch"
 
 printf '%s  %s\n' \
-  213ef61a7a564e4c9f664d48c42e6e6d4629602f926cae50a6591fba5875c299 \
+  bd6f313b66a8e8ccf276e1a33c0d12dcd04d8c9e6d1866239b8712511619519a \
   "$RDC_PATCH" | sha256sum -c -
 
 git -C /work/TheRock/rocm-systems apply --check "$RDC_PATCH"
@@ -145,8 +145,8 @@ Do not qualify a patched archive from build success alone. At minimum:
 Do not use the `rdci` exit status as the only assertion: affected clients were
 observed returning status 0 after `rdcd` had already crashed.
 
-The patched ROCm 7.14.1 artifact passed the full 16-field test on eight
-`gfx942` GPUs. Its distroless exporter candidate produced 128 GPU series;
-under a sustained GPU 0 workload, `gpu_util` was 100 and `valubusy` changed
-from `65.54684016745742` to `69.32468342459957` across consecutive qualified
-scrapes.
+The patched ROCm 10.0.0 artifact passed the native full 16-field test for 20
+rounds on eight `gfx942` GPUs. Under a sustained GPU 0 workload, `GPU_UTIL` was
+100 and `VALUBusy` ranged from 21.331% to 29.652% while the workload was active.
+The final distroless exporter measurements are recorded in
+[`docs/building/distroless.md`](../../docs/building/distroless.md).

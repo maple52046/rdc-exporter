@@ -8,26 +8,27 @@ and integration with this repository.
 ## Validation status
 
 The feature selection documented here is represented by the patched TheRock
-7.14.1 all-GPU minimal-RDC artifact used for the ROCm 7.14.1 exporter release.
-It was built from TheRock `f51dc6c91e0d3214f22853fd5cb3f96dbc7d2c4b` and
-rocm-systems `ca887ee80abfb82671fe1d6d8da708a713438e05`, with the RDC clock-index
+10.0.0 all-GPU minimal-RDC artifact used for the ROCm 10.0.0 exporter release.
+It was built from TheRock `16adc4d875fd4f65ea23c7c84e1c66706fde3047` and
+rocm-systems `6b0e43f341195e203754e08f850e437ff2fc09f9`, with the RDC clock-index
 bounds patch whose SHA-256 is
-`213ef61a7a564e4c9f664d48c42e6e6d4629602f926cae50a6591fba5875c299`.
+`bd6f313b66a8e8ccf276e1a33c0d12dcd04d8c9e6d1866239b8712511619519a`.
 The exact-base patch and application/validation procedure are stored in
 [`patches/rdc/`](../../patches/rdc/README.md).
 The archive SHA-256 is
-`0be3665633164f78c2d82fc13e9d105d2bdb87dd323f4be295946426260a3fef`;
+`a1e075511bb479e9baae21abc6786d52a60bf7dc0c7a2946c64f891a43179788`;
 the patched `librdc.so.1.3` SHA-256 is
-`1096eafa7df169aa60c700954a68bd4a7f6c6aac4e99dcbc4f4a72a78c2abe74`;
-and it contains all 28 source-registered GPU targets. As a historical
+`7c764ab6c23de64ff45e88c9b65be5073502e889192626c4e9679496a065402f`;
+it contains all 28 source-registered GPU targets, and GPU emulation was
+explicitly disabled. As a historical
 single-target reference, the preceding TheRock 7.13 `gfx950` build completed
 with 255 super-project steps in about 16 minutes on a large build server and
 produced a 9.0 GiB distribution; those timing and size figures do not describe
-the 7.14.1 all-GPU artifact.
+the 10.0.0 all-GPU artifact.
 
 The Debian 13 environment in this document is an adaptation for alignment with
 the final Debian 13 distroless image. The exact combination of Debian 13,
-TheRock 7.14.1, and this source-build recipe has **not yet been revalidated end to
+TheRock 10.0.0, and this source-build recipe has **not yet been revalidated end to
 end**; the container candidate uses the separately supplied prebuilt artifact.
 Treat the commands as the intended reproducible recipe and record any
 differences found during the next source build.
@@ -43,7 +44,7 @@ enables RDC:
 ```
 
 TheRock recursively enables everything declared by RDC's `REQUIRES` graph. The
-expected feature closure for TheRock 7.14 is:
+validated feature closure for TheRock 10.0 is:
 
 ```text
 SYSDEPS SYSDEPS_LIBMNL SYSDEPS_LIBNL BASE COMPILER CORE_AMDSMI
@@ -162,12 +163,12 @@ container, also pass:
 
 All remaining commands in sections 3 through 7 run inside the container.
 
-## 3. Fetch TheRock 7.14 sources
+## 3. Fetch TheRock 10.0 sources
 
 Pin a release tag or full commit. Do not build an unrecorded moving branch.
 
 ```bash
-export THEROCK_REF=therock-7.14
+export THEROCK_REF=therock-10.0
 
 git clone --depth 1 --branch "$THEROCK_REF" \
   https://github.com/ROCm/TheRock.git /work/TheRock
@@ -213,13 +214,14 @@ python -m pip install --upgrade pip
 python -m pip install -r /work/TheRock/requirements.txt
 ```
 
-Use the Python versions and packages accepted by TheRock 7.14's pinned
+Use the Python versions and packages accepted by TheRock 10.0's pinned
 requirements. Inspect the selected tag's official build container and pinned
 requirements again before changing `THEROCK_REF` to a later release.
 
 ## 5. Configure the minimal RDC feature set
 
-Configure a clean build tree. The example targets `gfx950` for MI350X/MI355X.
+Configure a clean build tree for every source-registered GPU target, matching
+the release artifact.
 
 ```bash
 cd /work/TheRock
@@ -236,18 +238,22 @@ cmake -B build -S . -GNinja \
   -Dtherock-SuiteSparse_BUILD_TYPE=Release \
   -DTHEROCK_ENABLE_ALL=OFF \
   -DTHEROCK_ENABLE_RDC=ON \
+  -DTHEROCK_ENABLE_EMULATION=OFF \
   -DTHEROCK_SPLIT_DEBUG_INFO=OFF \
   -DTHEROCK_MINIMAL_DEBUG_INFO=OFF \
   -DTHEROCK_QUIET_INSTALL=OFF \
   -DCMAKE_C_COMPILER_LAUNCHER=ccache \
   -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
   -DBUILD_TESTING=OFF \
-  -DTHEROCK_AMDGPU_FAMILIES=gfx950-dcgpu
+  -DTHEROCK_AMDGPU_FAMILIES="dcgpu-all;dgpu-all;igpu-all" \
+  -DTHEROCK_AMDGPU_DIST_BUNDLE_NAME=all-gpu
 ```
 
 Important choices:
 
 - Use semicolons, not commas, when selecting multiple GPU families.
+- `THEROCK_ENABLE_EMULATION=OFF` excludes emulation-only artifacts from this
+  production GPU runtime.
 - A single family does not require `THEROCK_AMDGPU_DIST_BUNDLE_NAME`.
 - For multiple families, set an explicit transparent bundle name, for example:
 
@@ -388,7 +394,7 @@ make prepare-runtime \
   THEROCK_ROCM_ROOT="$THEROCK_WORK/TheRock/build/dist/rocm"
 
 make image \
-  ROCM_VERSION=7.14.1 \
+  ROCM_VERSION=10.0.0 \
   ROCM_ARCHS=all-gpu \
   THEROCK_COMMIT="$(cat "$THEROCK_WORK/therock.commit")"
 ```
@@ -402,7 +408,7 @@ Run the static image verifier:
 
 ```bash
 make image-verify \
-  ROCM_VERSION=7.14.1 \
+  ROCM_VERSION=10.0.0 \
   ROCM_ARCHS=all-gpu \
   THEROCK_COMMIT="$(cat "$THEROCK_WORK/therock.commit")"
 ```
@@ -411,7 +417,7 @@ Resolve the image tag, start it on a GPU host, and verify both the exporter and
 direct `rocm-smi` execution:
 
 ```bash
-export IMAGE_TAG="$(make -s print-image ROCM_VERSION=7.14.1)"
+export IMAGE_TAG="$(make -s print-image ROCM_VERSION=10.0.0)"
 
 docker run -d --rm \
   --name rdc-exporter-therock \

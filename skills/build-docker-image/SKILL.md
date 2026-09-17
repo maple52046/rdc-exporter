@@ -14,16 +14,16 @@ Resolve these values before building; do not infer a release or commit:
 
 - `THEROCK_ROCM_ROOT`: extracted TheRock ROCm distribution with RDC.
 - `THEROCK_COMMIT`: full commit that produced that distribution.
-- `ROCM_VERSION` and `ROCM_ARCHS`: defaults are `7.14.1` and `all-gpu`; confirm
+- `ROCM_VERSION` and `ROCM_ARCHS`: defaults are `10.0.0` and `all-gpu`; confirm
   that they describe the supplied distribution.
 - Optional `IMAGE_TAG`; otherwise the Makefile derives the GHCR tag.
 
-The validated ROCm 7.14.1 baseline is the all-GPU artifact with TheRock commit
-`f51dc6c91e0d3214f22853fd5cb3f96dbc7d2c4b`, artifact SHA-256
-`0be3665633164f78c2d82fc13e9d105d2bdb87dd323f4be295946426260a3fef`,
+The validated ROCm 10.0.0 baseline is the all-GPU, no-emulation artifact with
+TheRock commit `16adc4d875fd4f65ea23c7c84e1c66706fde3047`, artifact SHA-256
+`a1e075511bb479e9baae21abc6786d52a60bf7dc0c7a2946c64f891a43179788`,
 and patched `librdc.so.1.3` SHA-256
-`1096eafa7df169aa60c700954a68bd4a7f6c6aac4e99dcbc4f4a72a78c2abe74`.
-Do not substitute an unpatched 7.14 artifact.
+`7c764ab6c23de64ff45e88c9b65be5073502e889192626c4e9679496a065402f`.
+Do not substitute an unpatched 10.0 artifact.
 
 The exporter binary must be compiled against the same RDC headers and libraries
 that supply the final runtime. Its cgo directives currently require that build
